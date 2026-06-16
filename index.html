@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <!-- ===== GREENOVA — RTH POLBAN v4 FINAL ===== -->
+
+<nav class="navbar">
+  <div class="nav-brand">
+    <img src="https://upload.wikimedia.org/wikipedia/id/3/3e/Logo_Politeknik_Negeri_Bandung.svg" alt="POLBAN" class="nav-logo" onerror="this.style.display='none'">
+    <div class="nav-title">GREENOVA<span>RTH POLBAN — Greener Campus, Greater Impact.</span></div>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a onclick="showPage('beranda')" class="active">Beranda</a>
+    <a onclick="showPage('zona')">Peta &amp; Zona RTH</a>
+    <a onclick="showPage('peta')">Peta</a>
+    <a onclick="showPage('dasar-hukum')">Dasar Hukum</a>
+    <a onclick="showPage('data-lahan')">Data Lahan</a>
+    
+    <a onclick="showPage('dokumentasi')">Dokumentasi &amp; Tanaman</a>
+    <a onclick="showPage('maintenance')">Maintenance</a>
+  </div>
+  <div class="nav-right">
+    <span class="role-badge" id="roleBadge" style="display:none">&#127807; Pengelola</span>
+    <button class="btn-nav-cta" id="btnLogin" onclick="openLoginModal()">Login Pengelola</button>
+    <button class="btn-nav-logout" id="btnLogout" onclick="logout()" style="display:none">Keluar</button>
+  </div>
+</nav>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="modal-wrap" id="loginModal">
+  <div class="modal-box" style="max-width:360px">
+    <h3>&#128274; Login Pengelola GREENOVA</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:1.2rem">Masuk untuk mengakses fitur pengelolaan RTH POLBAN.</p>
+    <div class="fg"><label>Username</label><input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="username"></div>
+    <div class="fg" style="margin-top:10px"><label>Password</label><input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="login-error" id="loginError">Username atau Password salah.</div>
+    <button class="btn-submit" style="margin-top:1rem" onclick="doLogin()">&#128275; Masuk</button>
+    <button class="btn-close-modal" onclick="closeLoginModal()">Batal</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lb-box" onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="closeLightbox()">&#10005;</button>
+    <img id="lbImg" src="" alt="">
+    <div class="lb-info"><div id="lbName" class="lb-name"></div><div id="lbDesc" class="lb-desc"></div></div>
+  </div>
+</div>
+
+<!-- INVENTARISASI MODAL -->
+<div class="modal-wrap" id="invModal">
+  <div class="modal-box" style="max-width:640px">
+    <h3 id="invTitle">&#128203; Inventarisasi</h3>
+    <p id="invSubtitle" style="font-size:12px;color:#888;margin-bottom:1rem"></p>
+    <div id="invList" style="max-height:300px;overflow-y:auto;margin-bottom:.5rem"></div>
+    <div id="invFormArea" style="display:none">
+      <div style="border-top:0.5px solid #e0e0e0;padding-top:1rem;margin-top:.5rem">
+        <div style="font-size:12px;font-weight:700;color:var(--dg);margin-bottom:.7rem">+ Tambah Item Inventaris</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px">
+          <div class="fg"><label>Nama Item</label><input type="text" id="invNama" placeholder="misal: Kursi Taman"></div>
+          <div class="fg"><label>Jumlah</label><input type="number" id="invJml" placeholder="1" min="1"></div>
+          <div class="fg"><label>Kondisi</label><select id="invKondisi"><option>Baik</option><option>Cukup</option><option>Perlu Perbaikan</option></select></div>
+        </div>
+        <div class="fg" style="margin-top:8px"><label>Keterangan</label><input type="text" id="invKet" placeholder="opsional"></div>
+        <button onclick="tambahInv()" style="margin-top:.7rem;background:var(--g1);color:#fff;border:none;padding:7px 20px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:700">+ Tambah</button>
+      </div>
+    </div>
+    <button class="btn-close-modal" onclick="closeInvModal()">Tutup</button>
+  </div>
+</div>
+
+<!-- PENANAMAN MODAL -->
+<div class="modal-wrap" id="tanamanModal">
+  <div class="modal-box" style="max-width:560px">
+    <h3>&#127807; Catat Penanaman Baru</h3>
+    <div id="tanamanLogModal" style="max-height:160px;overflow-y:auto;margin:1rem 0"></div>
+    <div style="border-top:0.5px solid #e0e0e0;padding-top:1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>Nama Tanaman</label><input type="text" id="tnNama" placeholder="misal: Pohon Sukun"></div>
+        <div class="fg"><label>Jumlah</label><input type="number" id="tnJml" placeholder="1" min="1"></div>
+        <div class="fg"><label>Lokasi RTH</label>
+          <select id="tnLokasi">
+            <optgroup label="Zona 1"><option>Zona 1 — Taman AN</option><option>Zona 1 — Taman Blk. Pendopo</option></optgroup>
+            <optgroup label="Zona 2"><option>Zona 2 — Lapangan Samping SC</option><option>Zona 2 — Lapangan Ilkasi</option></optgroup>
+            <optgroup label="Zona 3"><option>Zona 3 — Lapangan Voli</option><option>Zona 3 — Lapangan Basket</option><option>Zona 3 — Lapangan Bola</option></optgroup>
+            <optgroup label="Zona 4"><option>Zona 4 — Taman Akuntansi</option><option>Zona 4 — Taman Edukasi</option></optgroup>
+          </select>
+        </div>
+        <div class="fg"><label>Tanggal Tanam</label><input type="date" id="tnTgl"></div>
+        <div class="fg"><label>Penanggung Jawab</label><input type="text" id="tnPJ" placeholder="Nama petugas"></div>
+        <div class="fg"><label>Tim</label>
+          <select id="tnTim"><option value="TPN">TPN — Tim Penanaman</option><option value="KOR-001">KOR-001 — Koordinator</option></select>
+        </div>
+        <div class="fg" style="grid-column:1/-1"><label>Catatan</label><input type="text" id="tnCatatan" placeholder="opsional"></div>
+      </div>
+      <button class="btn-submit" style="margin-top:1rem" onclick="tambahTanaman()">&#127807; Catat Penanaman</button>
+    </div>
+    <button class="btn-close-modal" style="margin-top:.5rem" onclick="closeTanamanModal()">Tutup</button>
+  </div>
+</div>
+
+<!-- CATAT MAINTENANCE MODAL -->
+<div class="modal-wrap" id="maintModal">
+  <div class="modal-box" style="max-width:560px">
+    <h3>&#128295; Catat Maintenance</h3>
+    <form id="maintForm" onsubmit="submitMaint(event)" style="margin-top:1rem">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label>Zona &amp; Lokasi</label>
+          <select id="mLokasi" required>
+            <option value="">-- Pilih --</option>
+            <optgroup label="Zona 1"><option>Zona 1 — Taman AN</option><option>Zona 1 — Taman Blk. Pendopo</option></optgroup>
+            <optgroup label="Zona 2"><option>Zona 2 — Lapangan SC</option><option>Zona 2 — Lapangan Ilkasi</option></optgroup>
+            <optgroup label="Zona 3"><option>Zona 3 — Lapangan Voli</option><option>Zona 3 — Lapangan Basket</option><option>Zona 3 — Lapangan Bola</option></optgroup>
+            <optgroup label="Zona 4"><option>Zona 4 — Taman Akuntansi</option><option>Zona 4 — Taman Edukasi</option></optgroup>
+            <option value="Semua Zona">Semua Zona</option>
+          </select>
+        </div>
+        <div class="fg"><label>Jenis Kegiatan</label>
+          <select id="mJenis" required>
+            <option value="">-- Pilih --</option>
+            <option>Penyiraman</option><option>Perapihan Taman</option><option>Penyiangan Gulma</option>
+            <option>Pemotongan Rumput</option><option>Pemangkasan Pohon</option><option>Pemeriksaan Pohon</option>
+            <option>Pembersihan Drainase</option><option>Evaluasi RTH</option><option>Penebangan Pohon</option><option>Lainnya</option>
+          </select>
+        </div>
+        <div class="fg"><label>Tanggal</label><input type="date" id="mTgl" required></div>
+        <div class="fg"><label>Tim Pelaksana</label>
+          <select id="mTim" required>
+            <option value="">-- Pilih --</option>
+            <option value="TPP-001">TPP-001 — Ahmad Fauzi</option><option value="TPP-002">TPP-002 — Tim Penyiraman 2</option>
+            <option value="TPR-001">TPR-001 — Citra Lestari</option><option value="TPR-002">TPR-002 — Tim Perapihan 2</option>
+            <option value="TPM-001">TPM-001 — Dedi Saputra</option><option value="TPT-001">TPT-001 — Tim Penebangan</option>
+            <option value="TPN">TPN — Tim Penanaman</option><option value="KOR-001">KOR-001 — Koordinator RTH</option>
+          </select>
+        </div>
+        <div class="fg"><label>Status</label>
+          <select id="mStatus"><option>Belum Mulai</option><option>Dalam Proses</option><option>Menunggu Verifikasi</option><option>Disetujui</option></select>
+        </div>
+        <div class="fg"><label>Kondisi RTH</label>
+          <select id="mKondisi"><option>Baik</option><option>Cukup</option><option>Perlu Perhatian</option></select>
+        </div>
+        <div class="fg" style="grid-column:1/-1"><label>Catatan</label>
+          <textarea id="mCatatan" placeholder="Detail pekerjaan..." style="min-height:60px;border:0.5px solid #ddd;border-radius:8px;padding:8px;font-family:inherit;font-size:13px;outline:none;resize:vertical"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1rem">
+        <button type="submit" class="btn-submit" style="flex:1">&#128190; Simpan</button>
+        <button type="button" class="btn-cancel" onclick="closeMaintModal()" style="flex:1">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================
+     BERANDA (home)
+     ============================================================ -->
+<div class="page active" id="page-beranda">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">&#127807; GREENOVA — Sistem Informasi RTH POLBAN</div>
+      <h1>RUANG TERBUKA HIJAU <span>POLBAN</span></h1>
+      <p class="hero-tagline">Greener Campus, Greater Impact.</p>
+      <p>Sistem Informasi Pengelolaan dan Monitoring Ruang Terbuka Hijau Politeknik Negeri Bandung — 4 Zona, Terpantau &amp; Terawat.</p>
+      <div class="hero-btns">
+        <button class="btn-hero-primary" onclick="showPage('maintenance')">&#128295; Maintenance</button>
+        <button class="btn-hero-outline" onclick="showPage('zona')">&#127759; Peta &amp; Zona RTH</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-num">246.269</div><div class="hstat-lbl">m² Luas Kampus</div></div>
+        <div class="hstat"><div class="hstat-num">115.742</div><div class="hstat-lbl">m² RTH Eksisting</div></div>
+        <div class="hstat"><div class="hstat-num">56,42%</div><div class="hstat-lbl">RTH dari lahan</div></div>
+        <div class="hstat"><div class="hstat-num">4</div><div class="hstat-lbl">Zona RTH</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-strip">
+    <span>&#128205; Jl. Gegerkalong Hilir, Ciwaruga, Kec. Parongpong, KBB — 1.020–1.070 mdpl</span>
+    <span>&#9205; Perda KBB No.2/2012 &amp; UU No.26/2007</span>
+    <span>&#128197; Data 2026</span>
+  </div>
+
+  <!-- 3 Stat Card Utama -->
+  <section class="section" style="background:#fff;padding-bottom:0">
+    <div class="stat-grid" style="max-width:900px;margin:0 auto">
+      <div class="stat-card" onclick="showPage('data-lahan')">
+        <div class="stat-lbl">Luas Lahan Total</div>
+        <div class="stat-val">246.269 <span>m²</span></div>
+        <div class="stat-sub ok">&#9989; Data Resmi POLBAN</div>
+      </div>
+      <div class="stat-card grn" onclick="showPage('dasar-hukum')">
+        <div class="stat-lbl">RTH Eksisting</div>
+        <div class="stat-val">115.742 <span>m²</span></div>
+        <div class="stat-sub warn">&#127807; 56,42% dari luas lahan</div>
+      </div>
+      <div class="stat-card amb" onclick="showPage('dasar-hukum')">
+        <div class="stat-lbl">Kebutuhan RTH (KDH 60–80%)</div>
+        <div class="stat-val" style="font-size:15px;font-weight:700">147.761 <span>m²</span> (target 60%)</div>
+        <div class="stat-sub bad">&#9888; RTH 56,42% belum capai target 60%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Informasi RTH POLBAN — 3 kartu -->
+  <section class="section" style="background:#fff">
+    <div class="sec-hd">
+      <div class="sec-tag">Informasi RTH POLBAN</div>
+      <h2>Akses Cepat Informasi</h2>
+      <p>Pilih kategori untuk melihat detail informasi RTH POLBAN</p>
+    </div>
+    <div class="info-rth-grid" style="max-width:860px;margin:0 auto">
+      <div class="info-rth-card animate-fadeup" onclick="showPage('dasar-hukum')">
+        <div class="info-rth-icon">&#128220;</div>
+        <div class="info-rth-title">Peraturan Daerah</div>
+        <div class="info-rth-desc">Dasar hukum dan ketentuan KDH/RTH yang berlaku di kawasan POLBAN berdasarkan Perda KBB dan regulasi nasional.</div>
+        <div class="info-rth-arrow">Lihat Dasar Hukum &#8594;</div>
+      </div>
+      <div class="info-rth-card animate-fadeup delay-1" onclick="showPage('dasar-hukum')">
+        <div class="info-rth-icon">&#127795;</div>
+        <div class="info-rth-title">Kebutuhan RTH</div>
+        <div class="info-rth-desc">Target RTH 60% = 147.761 m². RTH POLBAN 115.742 m² (56,42%) masih kurang 32.019 m² dari target.</div>
+        <div class="info-rth-arrow">Lihat Perhitungan &#8594;</div>
+      </div>
+      <div class="info-rth-card animate-fadeup delay-2" onclick="showPage('data-lahan')">
+        <div class="info-rth-icon">&#127968;</div>
+        <div class="info-rth-title">Luas Lahan POLBAN</div>
+        <div class="info-rth-desc">Komposisi penggunaan lahan dan fasilitas bangunan POLBAN: gedung, laboratorium, kelas, kantor, dan area hijau.</div>
+        <div class="info-rth-arrow">Lihat Data Lahan &#8594;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About GREENOVA -->
+  <section class="section" style="background:var(--lg)">
+    <div class="sec-hd"><div class="sec-tag">Tentang GREENOVA</div></div>
+    <div class="about-section">
+      <div class="about-text animate-fadeup">
+        <h2>Pengelolaan RTH POLBAN Berbasis Zona</h2>
+        <p>GREENOVA adalah sistem informasi pengelolaan dan monitoring Ruang Terbuka Hijau Politeknik Negeri Bandung yang dirancang untuk memastikan kawasan hijau kampus terpantau, terdata, dan terawat secara berkelanjutan.</p>
+        <p>Dengan pembagian 4 zona RTH, sistem ini memungkinkan pengelola mencatat inventarisasi aset tiap taman, menjadwalkan maintenance rutin, memantau status perawatan, dan mendokumentasikan seluruh kegiatan penghijauan kampus.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem">
+          <button class="btn-hero-primary" style="background:var(--g1);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;border:none;cursor:pointer" onclick="showPage('zona')">&#127759; Eksplorasi Zona RTH</button>
+          <button class="btn-hero-primary" style="background:#fff;color:var(--g2);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;border:1px solid #ddd;cursor:pointer" onclick="showPage('maintenance')">&#128295; Jadwal Maintenance</button>
+        </div>
+      </div>
+      <div class="about-img animate-fadeup delay-1">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCuy7aQUVyHDRcThYCbSm4ukkeil1p3-XA7g&s" alt="Kampus POLBAN" onerror="this.style.display='none'">
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     ZONA RTH (Peta & Zona RTH)
+     ============================================================ -->
+<div class="page" id="page-zona">
+  <section class="section">
+    <div class="sec-hd">
+      <div class="sec-tag">Peta &amp; Zona RTH</div>
+      <h2>Zona Ruang Terbuka Hijau POLBAN</h2>
+      <p>Klik zona untuk melihat titik RTH dan inventarisasi asetnya. Klik "Database Tanaman" untuk katalog tanaman per zona.</p>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <button class="btn-add-maint" onclick="gotoTanamanTab()">&#127807; Lihat Database Tanaman</button>
+    </div>
+
+    <div class="zona-cards">
+      <!-- ZONA 1 -->
+      <div class="zona-card">
+        <div class="zona-card-hd z1-bg" onclick="toggleZona(1)">
+          <div class="zona-label">Zona 1</div>
+          <div class="zona-card-title">Taman Kampus Utara</div>
+          <div class="zona-card-sub">2 titik RTH &nbsp;·&nbsp; ±1.950 m² &nbsp;·&nbsp; Tim: TPR-001, TPP-001</div>
+          <div class="zona-toggle" id="ztoggle1">&#9660;</div>
+        </div>
+        <div class="zona-content" id="zcontent1" style="display:none">
+          <div class="rth-detail-grid">
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimD7R1kcT0TsDcQuctBANq3hGdLD1OGG8ick1y09-ZK01Tq9W3yy22Y8bgXVrZeZvcdmoqO_5-vC5i7tlF9Ayu2oUIEPE-5tUVVO33lGmNx1olYIlJm3WTLTt9F79ZNYSu9r4Z7AWZTyUK9cwvVeG-46UBy4mDCRAOx9WJPCW88Ng3eQWhwAhbvVZvHo4/s320/WhatsApp%20Image%202026-05-05%20at%203.12.15%20PM.jpeg" alt="Taman AN" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127795;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Taman Administrasi Niaga</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Taman Aktif</span><span class="rth-dc-luas">±1.200 m²</span></div>
+                <div class="rth-dc-desc">Taman aktif kawasan jurusan AN. Dilengkapi bangku taman, lampu, dan pohon peneduh.</div>
+                <button class="btn-inv" onclick="openInv('z1-taman-an')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhuU6h_jhHsmqvdSjAiilMzCPB7P5Ub34N2xQmgGuFybHIKC-mORefhixafTjJnLozVaOpZ4hnxZGQ9ff5L5ZkOF-RViMicrX75CBTPty6dF_jLTfVfAFzKnWLiuc8VbXMKABCz1J0k84qwCJzlBA4vYvQV_LgfVpWzS2egzbDI4ghDpGbbeyHtL5FNZyE/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(2).jpeg" alt="Taman Pendopo" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127966;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Taman Belakang Pendopo</div>
+                <div class="rth-dc-meta"><span class="badge-warn">Taman Pasif</span><span class="rth-dc-luas">±750 m²</span></div>
+                <div class="rth-dc-desc">Area hijau pasif di belakang Pendopo. Berfungsi sebagai area resapan dan estetika kampus.</div>
+                <button class="btn-inv" onclick="openInv('z1-pendopo')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONA 2 -->
+      <div class="zona-card">
+        <div class="zona-card-hd z2-bg" onclick="toggleZona(2)">
+          <div class="zona-label">Zona 2</div>
+          <div class="zona-card-title">Lapangan Pusat Kampus</div>
+          <div class="zona-card-sub">2 titik RTH &nbsp;·&nbsp; ±7.300 m² &nbsp;·&nbsp; Tim: TPP-001, TPP-002</div>
+          <div class="zona-toggle" id="ztoggle2">&#9660;</div>
+        </div>
+        <div class="zona-content" id="zcontent2" style="display:none">
+          <div class="rth-detail-grid">
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_OqJkW0OgL7QDQdqyuVCbW6ichETOyt55Qw46dxjZlo8npUnVBovmEUcjAajY498-Qh2xGkjn1aLLAWqCnEegn9bSZKfxgAw6tcK_RJegBFddBk1tH6UoijU5fJTZRe_8FFnTVIy5Jfjy8cxuScvNF0xGbEUMa5oVV5kDKm8Ehi3w5DCSK1l3YtJTcMA/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(2).jpeg" alt="Lap SC" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127953;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Lapangan Samping SC</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Lapangan Multi</span><span class="rth-dc-luas">±2.800 m²</span></div>
+                <div class="rth-dc-desc">Lapangan di samping Student Center, untuk berbagai kegiatan outdoor mahasiswa.</div>
+                <button class="btn-inv" onclick="openInv('z2-sc')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgJ369-KLV7p3-_9uscGIsnPgFlgxkNwormX1ZEhFs4p-l5ougsd5tGKpRS5CppdGXxHRvJQYGIeLKOcWc0aEj_1YLfQNDYT1vxrqGqBSydrsxH9niK9eqfwW8cDk0yiq3YO7bFfgPoS0Sm9mJdQrat7E1f4CGmCu_FvmLYpjdv5JBXVwsOCFan5MDMdzo/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(1).jpeg" alt="Lap Ilkasi" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#9917;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Lapangan Ilkasi</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Lapangan Multi</span><span class="rth-dc-luas">±4.500 m²</span></div>
+                <div class="rth-dc-desc">Lapangan utama POLBAN. Digunakan untuk upacara, olahraga, dan kegiatan kemahasiswaan.</div>
+                <button class="btn-inv" onclick="openInv('z2-ilkasi')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONA 3 -->
+      <div class="zona-card">
+        <div class="zona-card-hd z3-bg" onclick="toggleZona(3)">
+          <div class="zona-label">Zona 3</div>
+          <div class="zona-card-title">Kompleks Olahraga</div>
+          <div class="zona-card-sub">3 titik RTH &nbsp;·&nbsp; ±7.992 m² &nbsp;·&nbsp; Tim: TPM-001, TPP-002</div>
+          <div class="zona-toggle" id="ztoggle3">&#9660;</div>
+        </div>
+        <div class="zona-content" id="zcontent3" style="display:none">
+          <div class="rth-detail-grid">
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjDxSIb5444xPB_YuFllD77xTQu9JZzxe-xDYa9MOGqaoDMMo3SObk4hrLEpGuRVuHJddnAzMLHtryMS_JUJAEXPL0DNSb-tdvT63W3KhbjRABW62c3OOkBVMK9DWfpzOfIl3wvg29GxNnX/s320/IMG20170323111410.jpg" alt="Lap Voli" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127955;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Lapangan Bola Voli</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Lapangan Olahraga</span><span class="rth-dc-luas">±432 m²</span></div>
+                <div class="rth-dc-desc">Lapangan voli standar untuk kegiatan olahraga dan kompetisi internal kampus.</div>
+                <button class="btn-inv" onclick="openInv('z3-voli')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjtzEoU1kJjaY8wHi-i94rzPE4olYoc95tpXdVLuVHxfVslB6-lTYrxPVpU2DzEbji-jEon09xuORYw8QK2SwCXpQ1B1Wynx2DKnn1uCwGzIZkLWnfy9vGvL9gWyIf01NuHlCjqr40-w9G6/s320/IMG20170323111439.jpg" alt="Lap Basket" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127936;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Lapangan Basket</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Lapangan Olahraga</span><span class="rth-dc-luas">±420 m²</span></div>
+                <div class="rth-dc-desc">Lapangan basket dengan ring dan area sirkulasi. Aktif digunakan mahasiswa setiap hari.</div>
+                <button class="btn-inv" onclick="openInv('z3-basket')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjkR1tvmdJAgkFSieRpmbB7IaquxuHppyEltLrOduqdRdW4pupdFMqlOTaqgb2J8g2n47eJlbv07_COF_qsyZT7zNZDgY1c4Lv3d1ShudVoj7Pi0q53cGdBvBwrowngQBvo0Mvdc-dqOwaG/s320/IMG20170323111519.jpg" alt="Lap Bola" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#9917;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Lapangan Bola</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Lapangan Olahraga</span><span class="rth-dc-luas">±7.140 m²</span></div>
+                <div class="rth-dc-desc">Lapangan sepak bola terbesar POLBAN. Rumput alami memerlukan perawatan rutin oleh TPM.</div>
+                <button class="btn-inv" onclick="openInv('z3-bola')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONA 4 -->
+      <div class="zona-card">
+        <div class="zona-card-hd z4-bg" onclick="toggleZona(4)">
+          <div class="zona-label">Zona 4</div>
+          <div class="zona-card-title">Taman Kampus Selatan</div>
+          <div class="zona-card-sub">2 titik RTH &nbsp;·&nbsp; ±1.500 m² &nbsp;·&nbsp; Tim: TPR-002, TPN</div>
+          <div class="zona-toggle" id="ztoggle4">&#9660;</div>
+        </div>
+        <div class="zona-content" id="zcontent4" style="display:none">
+          <div class="rth-detail-grid">
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLJ3eEeCDWAGRYzIo5CNHJXF3q23rNkoI2oBiVnZEldrfPuydostBI2ZkeH6q0wXN1QuZGtHmdyJm2g-RbJvefxwt4Rk3le0o9VZyWhQrH-0k6FxkmicdEAJzquJiT6eAWUrCmGL7X7Pc0qI0wLRcbqBOs8OAJw1siKU3lJeRK56V_AMsSt3ffG5rAaQg/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(1).jpeg" alt="Taman Akuntansi" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127822;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Taman Akuntansi</div>
+                <div class="rth-dc-meta"><span class="badge-warn">Perlu Perawatan</span><span class="rth-dc-luas">±600 m²</span></div>
+                <div class="rth-dc-desc">Taman jurusan Akuntansi. Gazebo, 2 kursi taman, 1 lampu, 10 pohon sukun, 1 pohon beringin.</div>
+                <button class="btn-inv" onclick="openInv('z4-akuntansi')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+            <div class="rth-detail-card">
+              <div class="rth-dc-img"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEguJjPgb5XMJSDc9S8l_IGoUVb0eUrlXgAuVdEZiBljebCTWKBdbfiNhXtpL7YOHXfFcqYli93FMKEEUkBd0j3TKR6389ShVU3c6Nxzlpy3YAAcbPh-4hfPtxnEDNOyAca_blcCQslMVwDl133UDOshcGDVKzynUOr7ggV0uDNnpq9TzE4Zm60IaFUN8B0/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(3).jpeg" alt="Taman Edukasi" loading="lazy" onerror="this.parentElement.innerHTML='<div class=rth-dc-fallback>&#127807;</div>'"></div>
+              <div class="rth-dc-body">
+                <div class="rth-dc-name">Taman Edukasi</div>
+                <div class="rth-dc-meta"><span class="badge-ok">Taman Aktif</span><span class="rth-dc-luas">±900 m²</span></div>
+                <div class="rth-dc-desc">Taman edukasi botani sebagai ruang belajar outdoor. Koleksi tanaman edukatif berlabel.</div>
+                <button class="btn-inv" onclick="openInv('z4-edukasi')">&#128203; Inventarisasi</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     PETA
+     ============================================================ -->
+<div class="page" id="page-peta">
+  <section class="section">
+    <div class="sec-hd"><div class="sec-tag">Peta Interaktif</div><h2>Peta RTH POLBAN — ArcGIS</h2></div>
+    <div class="map-wrap">
+      <iframe src="https://www.arcgis.com/apps/mapviewer/index.html?webmap=374ff63b25634b47af91d0cccc1fd849" title="Peta RTH POLBAN" allowfullscreen></iframe>
+      <div class="map-badge">&#128205; RTH POLBAN — ArcGIS WebMap</div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     DASAR HUKUM
+     ============================================================ -->
+<div class="page" id="page-dasar-hukum">
+  <section class="section">
+    <div class="sec-hd">
+      <div class="sec-tag">Dasar Hukum</div>
+      <h2>Dasar Hukum Ruang Terbuka Hijau Kabupaten Bandung Barat</h2>
+      <p>Wilayah POLBAN Ciwaruga, Parongpong — kawasan perbukitan semi-urban, ketinggian 1.020–1.070 mdpl</p>
+    </div>
+    <div class="topo-card">
+      <div class="topo-title">&#127968; Data Topografi Kampus POLBAN — Ciwaruga, Parongpong, KBB</div>
+      <div class="topo-grid">
+        <div class="topo-item"><div class="topo-val">1.020–1.070 mdpl</div><div class="topo-lbl">Ketinggian (SRTM / Google Earth Pro)</div></div>
+        <div class="topo-item"><div class="topo-val">2%–15%</div><div class="topo-lbl">Kemiringan Lereng</div></div>
+        <div class="topo-item"><div class="topo-val">Maks 40%</div><div class="topo-lbl">KDB (Koefisien Dasar Bangunan)</div></div>
+        <div class="topo-item"><div class="topo-val">Target 60%</div><div class="topo-lbl">KDH Rekomendasi Kawasan POLBAN</div></div>
+      </div>
+      <div class="topo-note">Sumber: SRTM, Google Earth Pro, OpenTopography &amp; pemetaan spasial wilayah Ciwaruga–Parongpong, Bandung Barat</div>
+    </div>
+    <div style="background:#e3f2fd;border:1px solid #90CAF9;border-radius:12px;padding:1.2rem 1.5rem;margin-bottom:2rem;font-size:13px;color:#1565C0;line-height:1.7">
+      <strong>&#8505; Catatan Zonasi:</strong> Wilayah Ciwaruga, Parongpong termasuk kawasan perbukitan semi-urban, bukan KBU ketat. Standar yang berlaku mengacu pada <strong>Perda KBB No.2/2012 (RTH min 30%)</strong> dan UU No.26/2007. Namun, dengan kemiringan 2–15% dan fungsi hidrologis kawasan, standar KDH yang direkomendasikan adalah <strong>60%</strong>. RTH POLBAN saat ini 56,42% — <strong>belum memenuhi target 60%</strong>, masih kurang 3,58% (±8.802 m²).
+    </div>
+    <div class="perda-list">
+      <div class="perda-card"><div class="perda-num">Perda KBB No.2/2012</div><h4>RTRW Kabupaten Bandung Barat</h4><p>Perda KBB No. 2 Tahun 2012 tentang RTRW menetapkan RTH minimal <strong>30%</strong>: RTH publik min 20% dan RTH privat min 10%.</p></div>
+      <div class="perda-card"><div class="perda-num">UU No.26/2007</div><h4>Undang-Undang Penataan Ruang</h4><p>UU No. 26 Tahun 2007 mengamanatkan RTH minimal <strong>30%</strong> dari luas wilayah kawasan terbangun — 20% publik dan 10% privat.</p></div>
+      <div class="perda-card"><div class="perda-num">Permen PU 05/2008</div><h4>Pedoman Penyediaan RTH Perkotaan</h4><p>Pedoman teknis penyediaan dan pemanfaatan RTH mencakup klasifikasi, standar luas, dan pengelolaan kawasan hijau.</p></div>
+      <div class="perda-card"><div class="perda-num">Perpres 13/2012</div><h4>RTRW Pulau Jawa-Bali</h4><p>Mengatur penataan ruang Pulau Jawa-Bali termasuk ketentuan kawasan lindung dan pengendalian alih fungsi lahan hijau.</p></div>
+    </div>
+    <div class="calc-card">
+      <div class="chart-title" style="margin-bottom:1.2rem">Perhitungan RTH POLBAN 2026</div>
+      <div class="calc-formula">
+        Total Luas RTH POLBAN = 115.742 m²<br>
+        Persentase RTH = 115.742 ÷ 246.269 × 100%<br>
+        <strong>Persentase RTH = 56,42% dari luas lahan</strong><br><br>
+        Target RTH (60%) = 246.269 × 60% = <strong>147.761,4 m²</strong>
+      </div>
+      <div class="calc-row"><span>Luas Lahan Total POLBAN</span><span>246.269 m²</span></div>
+      <div class="calc-row"><span>Total Luas RTH Eksisting (9 titik, terverifikasi)</span><span class="green-txt">115.742 m²</span></div>
+      <div class="calc-row"><span>Persentase RTH dari lahan</span><span class="green-txt">56,42%</span></div>
+      <div class="calc-row"><span>Target RTH 60% (rekomendasi kawasan POLBAN)</span><span>147.761,4 m²</span></div>
+      <div class="calc-row"><span>Status RTH vs Target 60%</span><span style="color:#C62828;font-weight:700">&#9888; BELUM TERPENUHI (56,42% &lt; 60%)</span></div>
+      <div class="calc-row last"><span>Kekurangan RTH dari target 60%</span><span style="color:#C62828;font-weight:700">−32.019,4 m² &#9888;</span></div>
+      <div style="background:#fff3e0;border-radius:8px;padding:1rem;margin-top:1rem;font-size:13px;color:#E65100;font-weight:600">
+        &#9888; RTH POLBAN sebesar 115.742 m² (56,42%) <strong>belum memenuhi</strong> target KDH 60% (147.761 m²). Masih diperlukan penambahan RTH sebesar ±32.019 m² atau sekitar 3,58% dari total lahan untuk memenuhi target. Perlu upaya perluasan dan intensifikasi kawasan hijau kampus secara berkelanjutan.
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     DATA LAHAN
+     ============================================================ -->
+<div class="page" id="page-data-lahan">
+  <section class="section">
+    <div class="sec-hd"><div class="sec-tag">Data Lahan</div><h2>Data Lahan &amp; Fasilitas POLBAN</h2><p>Komposisi penggunaan lahan dan fasilitas bangunan POLBAN</p></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Distribusi lahan POLBAN (estimasi)</div>
+        <canvas id="chartLahan" width="260" height="190"></canvas>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4CAF50"></div>RTH Eksisting 56,42%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#37474F"></div>Bangunan ~13%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#90A4AE"></div>Jalan/Parkir ~6%</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">RTH Eksisting per zona (m²)</div>
+        <canvas id="chartZona" width="260" height="190"></canvas>
+        <div class="legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4CAF50"></div>Zona 1 ±1.950</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#1976D2"></div>Zona 2 ±7.300</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#F57C00"></div>Zona 3 ±7.992</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#7B1FA2"></div>Zona 4 ±1.500</div>
+        </div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="chart-title">Rincian fasilitas &amp; lahan POLBAN</div>
+      <div style="overflow-x:auto;margin-top:1rem">
+        <table class="data-table">
+          <thead><tr><th>Fasilitas</th><th>Jumlah</th><th>Luas (m²)</th><th>% dari Lahan</th></tr></thead>
+          <tbody>
+            <tr><td>Perpustakaan</td><td>1 unit</td><td>1.639,93</td><td>0,67%</td></tr>
+            <tr><td>Laboratorium</td><td>119 buah</td><td>11.399,67</td><td>4,63%</td></tr>
+            <tr><td>Studio</td><td>8 buah</td><td>724,92</td><td>0,29%</td></tr>
+            <tr><td>Ruang Kelas</td><td>105 buah</td><td>6.787,40</td><td>2,76%</td></tr>
+            <tr><td>Ruang Dosen</td><td>74 buah</td><td>2.935,14</td><td>1,19%</td></tr>
+            <tr><td>Ruang Kantor / Administrasi</td><td>—</td><td>5.568,66</td><td>2,26%</td></tr>
+            <tr><td>Asrama Mahasiswa</td><td>—</td><td>3.100,00</td><td>1,26%</td></tr>
+            <tr class="total-row"><td><strong>Total Bangunan</strong></td><td>—</td><td><strong>32.155,72</strong></td><td><strong>13,06%</strong></td></tr>
+            <tr><td>Jalan &amp; Parkir (estimasi)</td><td>—</td><td>~14.844</td><td>~6%</td></tr>
+            <tr><td>RTH Eksisting (9 titik, terverifikasi)</td><td>9 titik</td><td>115.742</td><td>56,42%</td></tr>
+            <tr class="total-row grn-row"><td colspan="2"><strong>Persentase RTH</strong></td><td><strong>115.742 m²</strong></td><td><strong>56,42%</strong></td></tr>
+            <tr class="total-row"><td><strong>Luas Lahan Total</strong></td><td>—</td><td><strong>246.269</strong></td><td><strong>100%</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="zona-summary-grid" style="margin-top:1.5rem">
+      <div class="zona-summary-card z1" onclick="showPage('zona')"><div class="zsc-num">Zona 1</div><div class="zsc-name">Taman AN + Pendopo</div><div class="zsc-luas">±1.950 m²</div><div class="zsc-items">2 titik RTH</div></div>
+      <div class="zona-summary-card z2" onclick="showPage('zona')"><div class="zsc-num">Zona 2</div><div class="zsc-name">Lapangan SC + Ilkasi</div><div class="zsc-luas">±7.300 m²</div><div class="zsc-items">2 titik RTH</div></div>
+      <div class="zona-summary-card z3" onclick="showPage('zona')"><div class="zsc-num">Zona 3</div><div class="zsc-name">Kompleks Olahraga</div><div class="zsc-luas">±7.992 m²</div><div class="zsc-items">3 titik RTH</div></div>
+      <div class="zona-summary-card z4" onclick="showPage('zona')"><div class="zsc-num">Zona 4</div><div class="zsc-name">Taman Akuntansi + Edukasi</div><div class="zsc-luas">±1.500 m²</div><div class="zsc-items">2 titik RTH</div></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     DATABASE TANAMAN
+     ============================================================ -->
+<!-- ============================================================
+     DOKUMENTASI & DATABASE TANAMAN (digabung)
+     ============================================================ -->
+<div class="page" id="page-dokumentasi">
+  <section class="section">
+    <div class="sec-hd"><div class="sec-tag">Dokumentasi &amp; Tanaman</div><h2>Dokumentasi &amp; Database Tanaman RTH POLBAN</h2><p>Galeri foto dan katalog tanaman di seluruh zona RTH kampus</p></div>
+
+    <!-- TABS -->
+    <div class="ptabs" style="margin-bottom:1.5rem">
+      <button class="ptab active" onclick="switchPTab(this,'dtab-foto')">&#128247; Galeri Foto</button>
+      <button class="ptab" onclick="switchPTab(this,'dtab-tanaman')">&#127807; Database Tanaman</button>
+    </div>
+
+    <!-- TAB: GALERI FOTO -->
+    <div class="ptab-panel active" id="dtab-foto">
+      <div class="filter-row">
+        <button class="fbtn active" onclick="filterGal(this,'all')">Semua</button>
+        <button class="fbtn" onclick="filterGal(this,'z1')">Zona 1</button>
+        <button class="fbtn" onclick="filterGal(this,'z2')">Zona 2</button>
+        <button class="fbtn" onclick="filterGal(this,'z3')">Zona 3</button>
+        <button class="fbtn" onclick="filterGal(this,'z4')">Zona 4</button>
+      </div>
+      <div class="gal-grid">
+      <div class="gal-item" data-cat="z1" onclick="openPhoto('Taman AN','Zona 1 | Taman Aktif | ±1.200 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimD7R1kcT0TsDcQuctBANq3hGdLD1OGG8ick1y09-ZK01Tq9W3yy22Y8bgXVrZeZvcdmoqO_5-vC5i7tlF9Ayu2oUIEPE-5tUVVO33lGmNx1olYIlJm3WTLTt9F79ZNYSu9r4Z7AWZTyUK9cwvVeG-46UBy4mDCRAOx9WJPCW88Ng3eQWhwAhbvVZvHo4/s320/WhatsApp%20Image%202026-05-05%20at%203.12.15%20PM.jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimD7R1kcT0TsDcQuctBANq3hGdLD1OGG8ick1y09-ZK01Tq9W3yy22Y8bgXVrZeZvcdmoqO_5-vC5i7tlF9Ayu2oUIEPE-5tUVVO33lGmNx1olYIlJm3WTLTt9F79ZNYSu9r4Z7AWZTyUK9cwvVeG-46UBy4mDCRAOx9WJPCW88Ng3eQWhwAhbvVZvHo4/s320/WhatsApp%20Image%202026-05-05%20at%203.12.15%20PM.jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127795;</div>'"></div><div class="gal-name">Taman AN</div><div class="gal-cat">Zona 1</div></div>
+      <div class="gal-item" data-cat="z1" onclick="openPhoto('Taman Belakang Pendopo','Zona 1 | Taman Pasif | ±750 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhuU6h_jhHsmqvdSjAiilMzCPB7P5Ub34N2xQmgGuFybHIKC-mORefhixafTjJnLozVaOpZ4hnxZGQ9ff5L5ZkOF-RViMicrX75CBTPty6dF_jLTfVfAFzKnWLiuc8VbXMKABCz1J0k84qwCJzlBA4vYvQV_LgfVpWzS2egzbDI4ghDpGbbeyHtL5FNZyE/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(2).jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhuU6h_jhHsmqvdSjAiilMzCPB7P5Ub34N2xQmgGuFybHIKC-mORefhixafTjJnLozVaOpZ4hnxZGQ9ff5L5ZkOF-RViMicrX75CBTPty6dF_jLTfVfAFzKnWLiuc8VbXMKABCz1J0k84qwCJzlBA4vYvQV_LgfVpWzS2egzbDI4ghDpGbbeyHtL5FNZyE/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(2).jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127966;</div>'"></div><div class="gal-name">Taman Blk. Pendopo</div><div class="gal-cat">Zona 1</div></div>
+      <div class="gal-item" data-cat="z2" onclick="openPhoto('Lapangan Samping SC','Zona 2 | Lapangan Multi | ±2.800 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_OqJkW0OgL7QDQdqyuVCbW6ichETOyt55Qw46dxjZlo8npUnVBovmEUcjAajY498-Qh2xGkjn1aLLAWqCnEegn9bSZKfxgAw6tcK_RJegBFddBk1tH6UoijU5fJTZRe_8FFnTVIy5Jfjy8cxuScvNF0xGbEUMa5oVV5kDKm8Ehi3w5DCSK1l3YtJTcMA/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(2).jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_OqJkW0OgL7QDQdqyuVCbW6ichETOyt55Qw46dxjZlo8npUnVBovmEUcjAajY498-Qh2xGkjn1aLLAWqCnEegn9bSZKfxgAw6tcK_RJegBFddBk1tH6UoijU5fJTZRe_8FFnTVIy5Jfjy8cxuScvNF0xGbEUMa5oVV5kDKm8Ehi3w5DCSK1l3YtJTcMA/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(2).jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127953;</div>'"></div><div class="gal-name">Lapangan Samping SC</div><div class="gal-cat">Zona 2</div></div>
+      <div class="gal-item" data-cat="z2" onclick="openPhoto('Lapangan Ilkasi','Zona 2 | Lapangan Multi | ±4.500 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgJ369-KLV7p3-_9uscGIsnPgFlgxkNwormX1ZEhFs4p-l5ougsd5tGKpRS5CppdGXxHRvJQYGIeLKOcWc0aEj_1YLfQNDYT1vxrqGqBSydrsxH9niK9eqfwW8cDk0yiq3YO7bFfgPoS0Sm9mJdQrat7E1f4CGmCu_FvmLYpjdv5JBXVwsOCFan5MDMdzo/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(1).jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgJ369-KLV7p3-_9uscGIsnPgFlgxkNwormX1ZEhFs4p-l5ougsd5tGKpRS5CppdGXxHRvJQYGIeLKOcWc0aEj_1YLfQNDYT1vxrqGqBSydrsxH9niK9eqfwW8cDk0yiq3YO7bFfgPoS0Sm9mJdQrat7E1f4CGmCu_FvmLYpjdv5JBXVwsOCFan5MDMdzo/s320/WhatsApp%20Image%202026-05-05%20at%203.09.31%20PM%20(1).jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#9917;</div>'"></div><div class="gal-name">Lapangan Ilkasi</div><div class="gal-cat">Zona 2</div></div>
+      <div class="gal-item" data-cat="z3" onclick="openPhoto('Lapangan Bola Voli','Zona 3 | Lapangan Olahraga | ±432 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjDxSIb5444xPB_YuFllD77xTQu9JZzxe-xDYa9MOGqaoDMMo3SObk4hrLEpGuRVuHJddnAzMLHtryMS_JUJAEXPL0DNSb-tdvT63W3KhbjRABW62c3OOkBVMK9DWfpzOfIl3wvg29GxNnX/s320/IMG20170323111410.jpg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjDxSIb5444xPB_YuFllD77xTQu9JZzxe-xDYa9MOGqaoDMMo3SObk4hrLEpGuRVuHJddnAzMLHtryMS_JUJAEXPL0DNSb-tdvT63W3KhbjRABW62c3OOkBVMK9DWfpzOfIl3wvg29GxNnX/s320/IMG20170323111410.jpg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127955;</div>'"></div><div class="gal-name">Lapangan Bola Voli</div><div class="gal-cat">Zona 3</div></div>
+      <div class="gal-item" data-cat="z3" onclick="openPhoto('Lapangan Basket','Zona 3 | Lapangan Olahraga | ±420 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjtzEoU1kJjaY8wHi-i94rzPE4olYoc95tpXdVLuVHxfVslB6-lTYrxPVpU2DzEbji-jEon09xuORYw8QK2SwCXpQ1B1Wynx2DKnn1uCwGzIZkLWnfy9vGvL9gWyIf01NuHlCjqr40-w9G6/s320/IMG20170323111439.jpg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjtzEoU1kJjaY8wHi-i94rzPE4olYoc95tpXdVLuVHxfVslB6-lTYrxPVpU2DzEbji-jEon09xuORYw8QK2SwCXpQ1B1Wynx2DKnn1uCwGzIZkLWnfy9vGvL9gWyIf01NuHlCjqr40-w9G6/s320/IMG20170323111439.jpg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127936;</div>'"></div><div class="gal-name">Lapangan Basket</div><div class="gal-cat">Zona 3</div></div>
+      <div class="gal-item" data-cat="z3" onclick="openPhoto('Lapangan Bola','Zona 3 | Lapangan Olahraga | ±7.140 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjkR1tvmdJAgkFSieRpmbB7IaquxuHppyEltLrOduqdRdW4pupdFMqlOTaqgb2J8g2n47eJlbv07_COF_qsyZT7zNZDgY1c4Lv3d1ShudVoj7Pi0q53cGdBvBwrowngQBvo0Mvdc-dqOwaG/s320/IMG20170323111519.jpg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjkR1tvmdJAgkFSieRpmbB7IaquxuHppyEltLrOduqdRdW4pupdFMqlOTaqgb2J8g2n47eJlbv07_COF_qsyZT7zNZDgY1c4Lv3d1ShudVoj7Pi0q53cGdBvBwrowngQBvo0Mvdc-dqOwaG/s320/IMG20170323111519.jpg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#9917;</div>'"></div><div class="gal-name">Lapangan Bola</div><div class="gal-cat">Zona 3</div></div>
+      <div class="gal-item" data-cat="z4" onclick="openPhoto('Taman Akuntansi','Zona 4 | Taman | ±600 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLJ3eEeCDWAGRYzIo5CNHJXF3q23rNkoI2oBiVnZEldrfPuydostBI2ZkeH6q0wXN1QuZGtHmdyJm2g-RbJvefxwt4Rk3le0o9VZyWhQrH-0k6FxkmicdEAJzquJiT6eAWUrCmGL7X7Pc0qI0wLRcbqBOs8OAJw1siKU3lJeRK56V_AMsSt3ffG5rAaQg/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(1).jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLJ3eEeCDWAGRYzIo5CNHJXF3q23rNkoI2oBiVnZEldrfPuydostBI2ZkeH6q0wXN1QuZGtHmdyJm2g-RbJvefxwt4Rk3le0o9VZyWhQrH-0k6FxkmicdEAJzquJiT6eAWUrCmGL7X7Pc0qI0wLRcbqBOs8OAJw1siKU3lJeRK56V_AMsSt3ffG5rAaQg/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(1).jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127822;</div>'"></div><div class="gal-name">Taman Akuntansi</div><div class="gal-cat">Zona 4</div></div>
+      <div class="gal-item" data-cat="z4" onclick="openPhoto('Taman Edukasi','Zona 4 | Taman Aktif | ±900 m²','https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEguJjPgb5XMJSDc9S8l_IGoUVb0eUrlXgAuVdEZiBljebCTWKBdbfiNhXtpL7YOHXfFcqYli93FMKEEUkBd0j3TKR6389ShVU3c6Nxzlpy3YAAcbPh-4hfPtxnEDNOyAca_blcCQslMVwDl133UDOshcGDVKzynUOr7ggV0uDNnpq9TzE4Zm60IaFUN8B0/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(3).jpeg')"><div class="gal-img-wrap"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEguJjPgb5XMJSDc9S8l_IGoUVb0eUrlXgAuVdEZiBljebCTWKBdbfiNhXtpL7YOHXfFcqYli93FMKEEUkBd0j3TKR6389ShVU3c6Nxzlpy3YAAcbPh-4hfPtxnEDNOyAca_blcCQslMVwDl133UDOshcGDVKzynUOr7ggV0uDNnpq9TzE4Zm60IaFUN8B0/s320/WhatsApp%20Image%202026-05-05%20at%202.58.48%20PM%20(3).jpeg" loading="lazy" onerror="this.parentElement.innerHTML='<div class=gal-fallback>&#127807;</div>'"></div><div class="gal-name">Taman Edukasi</div><div class="gal-cat">Zona 4</div></div>
+      </div>
+    </div><!-- /dtab-foto -->
+
+    <!-- TAB: DATABASE TANAMAN -->
+    <div class="ptab-panel" id="dtab-tanaman">
+      <div class="filter-row">
+        <button class="fbtn active" onclick="filterTanaman(this,'all')">Semua</button>
+        <button class="fbtn" onclick="filterTanaman(this,'z1')">Zona 1</button>
+        <button class="fbtn" onclick="filterTanaman(this,'z2')">Zona 2</button>
+        <button class="fbtn" onclick="filterTanaman(this,'z3')">Zona 3</button>
+        <button class="fbtn" onclick="filterTanaman(this,'z4')">Zona 4</button>
+        <button class="fbtn" onclick="filterTanaman(this,'pohon')">Pohon</button>
+        <button class="fbtn" onclick="filterTanaman(this,'semak')">Semak/Hias</button>
+        <button class="fbtn" onclick="filterTanaman(this,'rumput')">Rumput</button>
+      </div>
+      <div class="tanaman-db-grid" id="tanamanDbGrid"></div>
+    </div><!-- /dtab-tanaman -->
+
+  </section>
+</div>
+
+<!-- ============================================================
+     MAINTENANCE
+     ============================================================ -->
+<div class="page" id="page-maintenance">
+  <section class="section">
+    <div class="sec-hd"><div class="sec-tag">Maintenance</div><h2>Maintenance RTH POLBAN — GREENOVA</h2><p>Jadwal rutin, tugas harian, dan log kegiatan perawatan RTH</p></div>
+
+    <!-- Quick action pengelola -->
+    <div id="maintQuickAction" style="display:none;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem">
+      <button class="btn-add-maint" onclick="openMaintModal()">&#128295; Catat Maintenance</button>
+      <button class="btn-add-maint" style="background:#1976D2" onclick="openTanamanModal()">&#127807; Catat Penanaman</button>
+      <a class="btn-download" href="https://drive.google.com/uc?export=download&id=1tcbNLezEx92ZG5O8X2htfJVuspm37pOS" download="Jadwal_Maintenance_GREENOVA_POLBAN.pdf" target="_blank">&#8595; Download Jadwal Maintenance</a>
+    </div>
+
+    <div class="ptabs">
+      <button class="ptab active" onclick="switchPTab(this,'mtab-tugas')">&#9989; Tugas Harian</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-tim')">&#128100; Struktur Tim</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-mingguan')">&#128197; Jadwal Mingguan</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-bulanan')">&#128198; Jadwal Bulanan</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-ketentuan')">&#128204; Ketentuan</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-log')">&#128221; Log Kegiatan</button>
+      <button class="ptab" onclick="switchPTab(this,'mtab-tanaman')">&#127807; Log Penanaman</button>
+    </div>
+
+    <!-- TUGAS HARIAN -->
+    <div class="ptab-panel active" id="mtab-tugas">
+      <div class="maint-progress-wrap">
+        <div class="maint-prog-label">Progress Tugas Harian</div>
+        <div class="maint-prog-bar-track"><div class="maint-prog-bar-fill" id="tugasProgBar" style="width:0%"></div></div>
+        <div class="maint-prog-count" id="tugasProgCount">0 dari 5 tugas selesai</div>
+      </div>
+      <div class="tugas-list" id="tugasList"></div>
+    </div>
+
+    <!-- STRUKTUR TIM -->
+    <div class="ptab-panel" id="mtab-tim">
+      <div class="chart-title" style="margin-bottom:1rem">Struktur Tim Pengelola RTH POLBAN</div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>ID Tim</th><th>Nama Tim</th><th>Tugas</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge-ok">KOR-001</span></td><td><strong>Koordinator RTH</strong></td><td>Pengawasan, persetujuan, dan evaluasi seluruh kegiatan RTH</td></tr>
+            <tr><td><span class="badge-freq mingguan">TPN</span></td><td>Tim Penanaman</td><td>Penanaman dan penggantian tanaman baru</td></tr>
+            <tr><td><span class="badge-freq harian">TPP</span></td><td>Tim Penyiraman</td><td>Penyiraman rutin dan pemeriksaan kondisi harian</td></tr>
+            <tr><td><span class="badge-freq bulanan">TPR</span></td><td>Tim Perapihan</td><td>Penyiangan gulma dan perapihan taman</td></tr>
+            <tr><td><span class="badge-freq triwulan">TPM</span></td><td>Tim Babat Rumput</td><td>Pemotongan rumput di seluruh zona</td></tr>
+            <tr><td><span class="badge-freq insidental">TPT</span></td><td>Tim Penebangan</td><td>Pemangkasan dan penebangan pohon (perlu persetujuan koordinator)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="maint-section-title" style="margin-top:1.5rem">&#128203; Dashboard Tugas Harian (Contoh)</div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>ID Tugas</th><th>ID Tim</th><th>Nama Petugas</th><th>Kegiatan</th><th>Zona</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>WO-001</td><td>TPP-001</td><td>Ahmad Fauzi</td><td>Penyiraman</td><td>Zona 1</td><td><span class="badge-warn">Dalam Proses</span></td></tr>
+            <tr><td>WO-002</td><td>TPP-002</td><td>Budi Santoso</td><td>Penyiraman</td><td>Zona 2</td><td><span class="badge-warn">Dalam Proses</span></td></tr>
+            <tr><td>WO-003</td><td>TPR-001</td><td>Citra Lestari</td><td>Penyiangan Gulma</td><td>Zona 3</td><td><span class="badge-ok">Belum Mulai</span></td></tr>
+            <tr><td>WO-004</td><td>TPM-001</td><td>Dedi Saputra</td><td>Pemotongan Rumput</td><td>Zona 4</td><td><span class="badge-ok">Belum Mulai</span></td></tr>
+            <tr><td>WO-005</td><td>KOR-001</td><td>Koordinator</td><td>Verifikasi &amp; Evaluasi</td><td>Semua Zona</td><td><span class="badge-ok">Belum Mulai</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="flow-card" style="margin-top:1.2rem">
+        <div class="flow-title">&#9654; Alur Status Pekerjaan</div>
+        <div class="flow-steps">
+          <div class="flow-step bad">Belum Mulai</div><div class="flow-arrow">&#8594;</div>
+          <div class="flow-step warn">Dalam Proses</div><div class="flow-arrow">&#8594;</div>
+          <div class="flow-step info">Menunggu Verifikasi</div><div class="flow-arrow">&#8594;</div>
+          <div class="flow-step ok">Disetujui</div><div class="flow-arrow">/</div>
+          <div class="flow-step bad">Perlu Perbaikan</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JADWAL MINGGUAN -->
+    <div class="ptab-panel" id="mtab-mingguan">
+      <div class="maint-section-title">&#9728; Jadwal Penyiraman Mingguan (Senin–Jumat)</div>
+      <div style="overflow-x:auto;margin-bottom:1.5rem">
+        <table class="data-table">
+          <thead><tr><th>Hari</th><th>Waktu</th><th>Kegiatan</th><th>Zona</th><th>PIC</th></tr></thead>
+          <tbody>
+            <tr><td>Senin</td><td>07.00–09.00</td><td>Penyiraman</td><td>Zona 1–2</td><td><span class="badge-freq harian">TPP-001</span></td></tr>
+            <tr><td>Senin</td><td>09.00–11.00</td><td>Penyiraman</td><td>Zona 3–4</td><td><span class="badge-freq harian">TPP-002</span></td></tr>
+            <tr><td>Selasa</td><td>07.00–09.00</td><td>Penyiraman</td><td>Zona 1–2</td><td><span class="badge-freq harian">TPP-001</span></td></tr>
+            <tr><td>Selasa</td><td>09.00–11.00</td><td>Penyiraman</td><td>Zona 3–4</td><td><span class="badge-freq harian">TPP-002</span></td></tr>
+            <tr><td>Rabu</td><td>07.00–09.00</td><td>Penyiraman</td><td>Zona 1–2</td><td><span class="badge-freq harian">TPP-001</span></td></tr>
+            <tr><td>Rabu</td><td>09.00–11.00</td><td>Penyiraman</td><td>Zona 3–4</td><td><span class="badge-freq harian">TPP-002</span></td></tr>
+            <tr><td>Kamis</td><td>07.00–09.00</td><td>Penyiraman</td><td>Zona 1–2</td><td><span class="badge-freq harian">TPP-001</span></td></tr>
+            <tr><td>Kamis</td><td>09.00–11.00</td><td>Penyiraman</td><td>Zona 3–4</td><td><span class="badge-freq harian">TPP-002</span></td></tr>
+            <tr><td>Jumat</td><td>07.00–09.00</td><td>Penyiraman</td><td>Zona 1–2</td><td><span class="badge-freq harian">TPP-001</span></td></tr>
+            <tr><td>Jumat</td><td>09.00–11.00</td><td>Penyiraman</td><td>Zona 3–4</td><td><span class="badge-freq harian">TPP-002</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="maint-section-title">Detail Tugas TPP-001 (Ahmad Fauzi)</div>
+      <div class="detail-card">
+        <div class="detail-row"><span class="detail-time">07.00–08.00</span><span>Penyiraman 50 pohon peneduh</span></div>
+        <div class="detail-row"><span class="detail-time">08.00–08.30</span><span>Penyiraman 40 tanaman hias</span></div>
+        <div class="detail-row"><span class="detail-time">08.30–09.00</span><span>Penyiraman 30 titik rumput</span></div>
+        <div class="detail-row"><span class="detail-time">09.00–09.15</span><span>Upload dokumentasi foto</span></div>
+      </div>
+    </div>
+
+    <!-- JADWAL BULANAN -->
+    <div class="ptab-panel" id="mtab-bulanan">
+      <div class="maint-section-title">&#128198; Jadwal Pemeliharaan Bulanan</div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Minggu</th><th>Kegiatan</th><th>Zona</th><th>PIC</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge-freq harian">Ke-1</span></td><td>Perapihan taman</td><td>Zona 1–2</td><td>TPR-001</td></tr>
+            <tr><td><span class="badge-freq harian">Ke-1</span></td><td>Penyiangan gulma</td><td>Zona 3–4</td><td>TPR-002</td></tr>
+            <tr><td><span class="badge-freq mingguan">Ke-2</span></td><td>Pemotongan rumput</td><td>Semua Zona</td><td>TPM-001</td></tr>
+            <tr><td><span class="badge-freq mingguan">Ke-2</span></td><td>Pemeriksaan pohon</td><td>Semua Zona</td><td>TPT-001</td></tr>
+            <tr><td><span class="badge-freq bulanan">Ke-3</span></td><td>Perapihan taman</td><td>Zona 3–4</td><td>TPR-001</td></tr>
+            <tr><td><span class="badge-freq bulanan">Ke-3</span></td><td>Penyiangan gulma</td><td>Zona 1–2</td><td>TPR-002</td></tr>
+            <tr><td><span class="badge-freq triwulan">Ke-4</span></td><td>Pemotongan rumput</td><td>Semua Zona</td><td>TPM-001</td></tr>
+            <tr><td><span class="badge-freq triwulan">Ke-4</span></td><td>Evaluasi RTH</td><td>Semua Zona</td><td>KOR-001</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- KETENTUAN -->
+    <div class="ptab-panel" id="mtab-ketentuan">
+      <div class="ketentuan-grid">
+        <div class="ket-card k-harian"><div class="ket-icon">&#128167;</div><div class="ket-title">Penyiraman — Kemarau</div><div class="ket-val">Setiap Hari</div><div class="ket-desc">Dilakukan TPP pagi dan sore hari</div></div>
+        <div class="ket-card k-mingguan"><div class="ket-icon">&#127783;</div><div class="ket-title">Penyiraman — Hujan</div><div class="ket-val">2× per Minggu</div><div class="ket-desc">Disesuaikan curah hujan harian</div></div>
+        <div class="ket-card k-bulanan"><div class="ket-icon">&#9986;</div><div class="ket-title">Perapihan Taman</div><div class="ket-val">2× per Bulan</div><div class="ket-desc">Minggu ke-1 dan ke-3 oleh TPR</div></div>
+        <div class="ket-card k-bulanan"><div class="ket-icon">&#127807;</div><div class="ket-title">Penyiangan Gulma</div><div class="ket-val">2× per Bulan</div><div class="ket-desc">Minggu ke-1 dan ke-3 oleh TPR</div></div>
+        <div class="ket-card k-mingguan"><div class="ket-icon">&#128692;</div><div class="ket-title">Pemotongan Rumput</div><div class="ket-val">1–2× per Bulan</div><div class="ket-desc">Minggu ke-2 dan ke-4 oleh TPM</div></div>
+        <div class="ket-card k-triwulan"><div class="ket-icon">&#127795;</div><div class="ket-title">Pemangkasan Pohon</div><div class="ket-val">Setiap 3 Bulan</div><div class="ket-desc">Oleh TPT, persetujuan KOR-001</div></div>
+        <div class="ket-card k-khusus"><div class="ket-icon">&#128204;</div><div class="ket-title">Penebangan Pohon</div><div class="ket-val">Insidental</div><div class="ket-desc">Tim khusus TPT, wajib persetujuan KOR-001</div></div>
+        <div class="ket-card k-khusus"><div class="ket-icon">&#127807;</div><div class="ket-title">Penanaman Baru</div><div class="ket-val">Berdasarkan Permintaan</div><div class="ket-desc">Penggantian tanaman mati atau program penghijauan</div></div>
+      </div>
+    </div>
+
+    <!-- LOG KEGIATAN -->
+    <div class="ptab-panel" id="mtab-log">
+      <div class="panel-hd">
+        <div class="chart-title">Log kegiatan maintenance</div>
+        <span id="logBadge" style="font-size:12px;color:#aaa"></span>
+      </div>
+      <div id="maintLogList"><p class="empty-msg">Belum ada log. Login sebagai Pengelola lalu klik "Catat Maintenance".</p></div>
+    </div>
+
+    <!-- LOG PENANAMAN -->
+    <div class="ptab-panel" id="mtab-tanaman">
+      <div class="chart-title" style="margin-bottom:1rem">Log penanaman tanaman baru</div>
+      <div id="tanamanLogList"><p class="empty-msg">Belum ada log penanaman.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h5>GREENOVA — RTH POLBAN</h5>
+      <p style="font-style:italic;color:var(--g3);margin-bottom:.5rem">Greener Campus, Greater Impact.</p>
+      <p>Sistem Informasi Pengelolaan dan Monitoring Ruang Terbuka Hijau POLBAN</p>
+      <p style="font-size:11px;margin-top:.5rem;line-height:1.7">&#128205; Jalan Gegerkalong Hilir, Desa Ciwaruga,<br>Kecamatan Parongpong, Kabupaten Bandung Barat<br>Luas Kampus: 246.269 m²</p>
+    </div>
+    <div>
+      <h5>Menu</h5>
+      <a onclick="showPage('beranda')">Beranda</a>
+      <a onclick="showPage('zona')">Peta &amp; Zona RTH</a>
+      <a onclick="showPage('dasar-hukum')">Dasar Hukum</a>
+      <a onclick="showPage('data-lahan')">Data Lahan</a>
+      
+      <a onclick="showPage('dokumentasi')">Dokumentasi &amp; Tanaman</a>
+      <a onclick="showPage('maintenance')">Maintenance</a>
+    </div>
+    <div>
+      <h5>Tim GREENOVA</h5>
+      <p>KOR-001 — Koordinator RTH</p>
+      <p>TPP — Tim Penyiraman</p>
+      <p>TPR — Tim Perapihan</p>
+      <p>TPM — Tim Babat Rumput</p>
+      <p>TPT — Tim Penebangan</p>
+      <p>TPN — Tim Penanaman</p>
+    </div>
+    <div>
+      <h5>Kontak</h5>
+      <p>&#128231; rth@polban.ac.id</p>
+      <p>&#128222; (022) 2013789</p>
+      <p>&#127760; polban.ac.id</p>
+    </div>
+  </div>
+  <div class="footer-btm">&#169; 2026 KELOMPOK 3 &mdash; 2B Manajemen Aset Sistem Informasi Aset | Politeknik Negeri Bandung</div>
+</footer>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
